@@ -1,0 +1,251 @@
+{
+  "$id": "https://github.com/yurikobets/cli-builder/schema/cli-schema.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Declarative CLI definition format for cli-builder",
+  "properties": {
+    "auth": {
+      "properties": {
+        "config": {
+          "additionalProperties": {
+            "properties": {
+              "env": {
+                "type": "string"
+              },
+              "file": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "object"
+        },
+        "type": {
+          "enum": [
+            "none",
+            "bearer",
+            "api_key",
+            "apple_jwt"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "base_url": {
+      "format": "uri",
+      "type": "string"
+    },
+    "commands": {
+      "additionalProperties": {
+        "properties": {
+          "action": {
+            "properties": {
+              "method": {
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PATCH",
+                  "DELETE",
+                  "PUT"
+                ],
+                "type": "string"
+              },
+              "operation_id": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "method",
+              "path"
+            ],
+            "type": "object"
+          },
+          "args": {
+            "items": {
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "path_param": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "body": {
+            "properties": {
+              "attributes": {
+                "items": {
+                  "properties": {
+                    "default": {},
+                    "description": {
+                      "type": "string"
+                    },
+                    "field": {
+                      "type": "string"
+                    },
+                    "flag": {
+                      "type": "string"
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "flag",
+                    "field",
+                    "type"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "format": {
+                "enum": [
+                  "json_api",
+                  "raw_json"
+                ],
+                "type": "string"
+              },
+              "relationships": {
+                "items": {
+                  "properties": {
+                    "flag": {
+                      "type": "string"
+                    },
+                    "relationship": {
+                      "type": "string"
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "resource_type": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "flag",
+                    "relationship",
+                    "resource_type"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "resource_type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "format"
+            ],
+            "type": "object"
+          },
+          "commands": {
+            "additionalProperties": {
+              "$ref": "#/properties/commands/additionalProperties"
+            },
+            "type": "object"
+          },
+          "description": {
+            "type": "string"
+          },
+          "parameters": {
+            "items": {
+              "properties": {
+                "default": {},
+                "description": {
+                  "type": "string"
+                },
+                "flag": {
+                  "type": "string"
+                },
+                "max": {
+                  "type": "integer"
+                },
+                "query": {
+                  "type": "string"
+                },
+                "type": {
+                  "enum": [
+                    "string",
+                    "string_array",
+                    "integer",
+                    "boolean",
+                    "enum",
+                    "enum_array"
+                  ],
+                  "type": "string"
+                },
+                "values": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "flag",
+                "query",
+                "type"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "type": "object"
+    },
+    "description": {
+      "type": "string"
+    },
+    "name": {
+      "description": "CLI tool name (used as the root command)",
+      "type": "string"
+    },
+    "output": {
+      "properties": {
+        "default_format": {
+          "enum": [
+            "table",
+            "json",
+            "yaml"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "version": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "base_url"
+  ],
+  "title": "cli-schema",
+  "type": "object"
+}
