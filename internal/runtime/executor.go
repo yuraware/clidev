@@ -35,6 +35,11 @@ func (e *Executor) Execute(cobraCmd *cobra.Command, args []string, cmd cliSchema
 	if cmd.Action == nil {
 		return nil, fmt.Errorf("command has no action")
 	}
+
+	if cmd.Action.Type == "graphql" {
+		return e.executeGraphQL(cobraCmd, args, cmd)
+	}
+
 	action := cmd.Action
 
 	// 1. Build path: substitute {param} placeholders with positional args.
@@ -47,7 +52,9 @@ func (e *Executor) Execute(cobraCmd *cobra.Command, args []string, cmd cliSchema
 			break
 		}
 		placeholder := "{" + arg.PathParam + "}"
-		path = strings.ReplaceAll(path, placeholder, args[i])
+		if arg.PathParam != "" {
+			path = strings.ReplaceAll(path, placeholder, args[i])
+		}
 	}
 
 	// 2. Build query string from flags.
@@ -203,4 +210,75 @@ func buildRawBody(cmd *cobra.Command, body *cliSchema.BodyConfig) ([]byte, error
 		}
 	}
 	return json.Marshal(m)
+}
+
+// executeGraphQL sends a GraphQL request with variables derived from CLI flags/args.
+func (e *Executor) executeGraphQL(cobraCmd *cobra.Command, args []string, cmd cliSchema.Command) ([]byte, error) {
+	action := cmd.Action
+	query := action.GraphQLQuery
+
+	// Build variables map from positional args (required scalars) + flags (optional).
+	variables := map[string]any{}
+
+	for i, arg := range cmd.Args {
+		if i < len(args) {
+			variables[arg.Name] = args[i]
+		}
+	}
+
+	if cmd.Body != nil {
+		for _, f := range cmd.Body.Attributes {
+			flagName := strings.TrimPrefix(f.Flag, "--")
+			fl := cobraCmd.Flags().Lookup(flagName)
+			if fl == nil {
+				continue
+			}
+			val := fl.Value.String()
+			if val == "" && f.Required {
+				return nil, fmt.Errorf("missing required flag: %s", f.Flag)
+			}
+			if val != "" {
+				variables[f.Field] = val
+			}
+		}
+	}
+
+	payload, err := json.Marshal(map[string]any{
+		"query":     query,
+		"variables": variables,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("building graphql payload: %w", err)
+	}
+
+	rawURL := e.BaseURL + action.Path
+	req, err := http.NewRequest("POST", rawURL, bytes.NewReader(payload))
+	if err != nil {
+		return nil, fmt.Errorf("building request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	authHeader, err := e.Auth.AuthHeader()
+	if err != nil {
+		return nil, fmt.Errorf("generating auth: %w", err)
+	}
+	if authHeader != "" {
+		req.Header.Set("Authorization", authHeader)
+	}
+
+	resp, err := e.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("executing graphql request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading response: %w", err)
+	}
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
+	}
+	return body, nil
 }
