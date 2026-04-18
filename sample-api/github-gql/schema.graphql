@@ -1,0 +1,205 @@
+"""
+GitHub GraphQL API (simplified schema for CLI demo).
+Full schema: https://docs.github.com/en/graphql
+"""
+scalar DateTime
+scalar URI
+scalar HTML
+scalar GitObjectID
+
+enum RepositoryOrderField {
+  CREATED_AT
+  UPDATED_AT
+  PUSHED_AT
+  NAME
+  STARGAZERS
+}
+
+enum OrderDirection {
+  ASC
+  DESC
+}
+
+enum IssueState {
+  OPEN
+  CLOSED
+}
+
+enum PullRequestState {
+  OPEN
+  CLOSED
+  MERGED
+}
+
+input RepositoryOrder {
+  field: RepositoryOrderField!
+  direction: OrderDirection!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type User {
+  id: ID!
+  login: String!
+  name: String
+  email: String
+  bio: String
+  company: String
+  location: String
+  websiteUrl: URI
+  avatarUrl: URI!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  followers: Int!
+  following: Int!
+  publicRepos: Int!
+}
+
+type Repository {
+  id: ID!
+  name: String!
+  nameWithOwner: String!
+  description: String
+  url: URI!
+  homepageUrl: URI
+  isPrivate: Boolean!
+  isFork: Boolean!
+  isArchived: Boolean!
+  stargazerCount: Int!
+  forkCount: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  pushedAt: DateTime
+  primaryLanguage: String
+  defaultBranchRef: String
+}
+
+type RepositoryConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  nodes: [Repository]
+}
+
+type Issue {
+  id: ID!
+  number: Int!
+  title: String!
+  body: String
+  state: IssueState!
+  url: URI!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  closedAt: DateTime
+  author: User
+  labels: [String]
+}
+
+type IssueConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  nodes: [Issue]
+}
+
+type PullRequest {
+  id: ID!
+  number: Int!
+  title: String!
+  body: String
+  state: PullRequestState!
+  url: URI!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  mergedAt: DateTime
+  author: User
+  headRefName: String!
+  baseRefName: String!
+  isDraft: Boolean!
+}
+
+type PullRequestConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  nodes: [PullRequest]
+}
+
+type Organization {
+  id: ID!
+  login: String!
+  name: String
+  description: String
+  email: String
+  websiteUrl: URI
+  avatarUrl: URI!
+  createdAt: DateTime!
+  membersCount: Int!
+  repositoriesCount: Int!
+}
+
+type CreateIssuePayload {
+  issue: Issue
+}
+
+type CloseIssuePayload {
+  issue: Issue
+}
+
+type CreatePullRequestPayload {
+  pullRequest: PullRequest
+}
+
+type StarRepositoryPayload {
+  starredRepository: Repository
+}
+
+input CreateIssueInput {
+  repositoryId: ID!
+  title: String!
+  body: String
+  labelIds: [ID!]
+  assigneeIds: [ID!]
+}
+
+input CreatePullRequestInput {
+  repositoryId: ID!
+  baseRefName: String!
+  headRefName: String!
+  title: String!
+  body: String
+  draft: Boolean
+}
+
+type Query {
+  """Look up a user by login."""
+  user(login: String!): User
+
+  """Look up a repository by owner and name."""
+  repository(owner: String!, name: String!): Repository
+
+  """Look up an organization by login."""
+  organization(login: String!): Organization
+
+  """Search across GitHub resources."""
+  search(query: String!, type: String!, first: Int, after: String): RepositoryConnection
+
+  """Get repositories for the authenticated user."""
+  viewer: User
+}
+
+type Mutation {
+  """Create a new issue."""
+  createIssue(input: CreateIssueInput!): CreateIssuePayload
+
+  """Close an existing issue."""
+  closeIssue(issueId: ID!): CloseIssuePayload
+
+  """Create a new pull request."""
+  createPullRequest(input: CreatePullRequestInput!): CreatePullRequestPayload
+
+  """Star a repository."""
+  addStar(starrableId: ID!): StarRepositoryPayload
+}

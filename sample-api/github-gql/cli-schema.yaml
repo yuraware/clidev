@@ -1,0 +1,136 @@
+name: graphql
+version: "1.0"
+description: GraphQL API
+base_url: https://api.example.com
+auth:
+    type: bearer
+    config:
+        token:
+            env: GRAPHQL_TOKEN
+    comment: Set GRAPHQL_TOKEN to your personal access token
+output:
+    default_format: json
+commands:
+    mutate:
+        description: Run GraphQL mutations (write operations)
+        commands:
+            add-star:
+                description: Star a repository.
+                action:
+                    type: graphql
+                    method: POST
+                    path: /graphql
+                    operation_id: addStar
+                    graphql_query: 'mutation addStar($starrableId: ID!) { addStar(starrableId: $starrableId) { __typename } }'
+                args:
+                    - name: starrableId
+                      required: true
+            close-issue:
+                description: Close an existing issue.
+                action:
+                    type: graphql
+                    method: POST
+                    path: /graphql
+                    operation_id: closeIssue
+                    graphql_query: 'mutation closeIssue($issueId: ID!) { closeIssue(issueId: $issueId) { __typename } }'
+                args:
+                    - name: issueId
+                      required: true
+            create-issue:
+                description: Create a new issue.
+                action:
+                    type: graphql
+                    method: POST
+                    path: /graphql
+                    operation_id: createIssue
+                    graphql_query: 'mutation createIssue($input: CreateIssueInput!) { createIssue(input: $input) { __typename } }'
+                body:
+                    format: graphql_vars
+                    attributes:
+                        - flag: --input
+                          field: input
+                          type: string
+                          required: true
+            create-pull-request:
+                description: Create a new pull request.
+                action:
+                    type: graphql
+                    method: POST
+                    path: /graphql
+                    operation_id: createPullRequest
+                    graphql_query: 'mutation createPullRequest($input: CreatePullRequestInput!) { createPullRequest(input: $input) { __typename } }'
+                body:
+                    format: graphql_vars
+                    attributes:
+                        - flag: --input
+                          field: input
+                          type: string
+                          required: true
+    query:
+        description: Run GraphQL queries (read operations)
+        commands:
+            organization:
+                description: Look up an organization by login.
+                action:
+                    type: graphql
+                    method: POST
+                    path: /graphql
+                    operation_id: organization
+                    graphql_query: 'query organization($login: String!) { organization(login: $login) { id login name description email websiteUrl avatarUrl createdAt membersCount repositoriesCount } }'
+                args:
+                    - name: login
+                      required: true
+            repository:
+                description: Look up a repository by owner and name.
+                action:
+                    type: graphql
+                    method: POST
+                    path: /graphql
+                    operation_id: repository
+                    graphql_query: 'query repository($owner: String!, $name: String!) { repository(owner: $owner, name: $name) { id name nameWithOwner description url homepageUrl isPrivate isFork isArchived stargazerCount } }'
+                args:
+                    - name: owner
+                      required: true
+                    - name: name
+                      required: true
+            search:
+                description: Search across GitHub resources.
+                action:
+                    type: graphql
+                    method: POST
+                    path: /graphql
+                    operation_id: search
+                    graphql_query: 'query search($query: String!, $type: String!, $first: Int, $after: String) { search(query: $query, type: $type, first: $first, after: $after) { totalCount } }'
+                args:
+                    - name: query
+                      required: true
+                    - name: type
+                      required: true
+                body:
+                    format: graphql_vars
+                    attributes:
+                        - flag: --first
+                          field: first
+                          type: integer
+                        - flag: --after
+                          field: after
+                          type: string
+            user:
+                description: Look up a user by login.
+                action:
+                    type: graphql
+                    method: POST
+                    path: /graphql
+                    operation_id: user
+                    graphql_query: 'query user($login: String!) { user(login: $login) { id login name email bio company location websiteUrl avatarUrl createdAt } }'
+                args:
+                    - name: login
+                      required: true
+            viewer:
+                description: Get repositories for the authenticated user.
+                action:
+                    type: graphql
+                    method: POST
+                    path: /graphql
+                    operation_id: viewer
+                    graphql_query: query viewer { viewer { id login name email bio company location websiteUrl avatarUrl createdAt } }
