@@ -1,0 +1,110 @@
+name: google-pubsub-v1
+version: "1.0"
+description: google.pubsub.v1 gRPC API (HTTP transcoding)
+base_url: https://pubsub.googleapis.com
+auth:
+    type: none
+output:
+    default_format: table
+commands:
+    publisher:
+        description: Publisher service
+        commands:
+            create:
+                description: CreateTopic → PUT /v1/{name}
+                action:
+                    method: PUT
+                    path: /v1/{name}
+                    operation_id: CreateTopic
+                args:
+                    - name: name
+                      path_param: name
+                      required: true
+                      description: Resource name / name
+                body:
+                    format: raw_json
+                    attributes:
+                        - flag: --message_storage_policy
+                          field: message_storage_policy
+                          type: string
+                        - flag: --kms_key_name
+                          field: kms_key_name
+                          type: string
+                        - flag: --schema_settings
+                          field: schema_settings
+                          type: string
+                        - flag: --satisfies_pzs
+                          field: satisfies_pzs
+                          type: boolean
+                        - flag: --message_retention_duration
+                          field: message_retention_duration
+                          type: string
+                        - flag: --state
+                          field: state
+                          type: string
+                        - flag: --ingestion_data_source_settings
+                          field: ingestion_data_source_settings
+                          type: string
+                        - flag: --message_transforms
+                          field: message_transforms
+                          type: string_array
+            delete:
+                description: DeleteTopic → DELETE /v1/{topic}
+                action:
+                    method: DELETE
+                    path: /v1/{topic}
+                    operation_id: DeleteTopic
+                args:
+                    - name: topic
+                      path_param: topic
+                      required: true
+                      description: Resource name / topic
+            get:
+                description: GetTopic → GET /v1/{topic}
+                action:
+                    method: GET
+                    path: /v1/{topic}
+                    operation_id: GetTopic
+                args:
+                    - name: topic
+                      path_param: topic
+                      required: true
+                      description: Resource name / topic
+            list:
+                description: ListTopics → GET /v1/{project}/topics
+                action:
+                    method: GET
+                    path: /v1/{project}/topics
+                    operation_id: ListTopics
+                args:
+                    - name: project
+                      path_param: project
+                      required: true
+                      description: Resource name / project
+            publish:
+                description: Publish → POST /v1/{topic}:publish
+                action:
+                    method: POST
+                    path: /v1/{topic}:publish
+                    operation_id: Publish
+                body:
+                    format: raw_json
+                    attributes:
+                        - flag: --messages
+                          field: messages
+                          type: string_array
+            update:
+                description: UpdateTopic → PATCH /v1/{topic.name=projects/*/topics/*}
+                action:
+                    method: PATCH
+                    path: /v1/{topic.name=projects/*/topics/*}
+                    operation_id: UpdateTopic
+                body:
+                    format: raw_json
+                    attributes:
+                        - flag: --topic
+                          field: topic
+                          type: string
+                        - flag: --update_mask
+                          field: update_mask
+                          type: string

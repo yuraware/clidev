@@ -1,0 +1,63 @@
+name: streetlights-kafka-api
+version: 1.0.0
+description: Streetlights Kafka API
+base_url: kafka-secure://test.mykafkacluster.org:18092
+auth:
+    type: basic
+    config:
+        password:
+            env: KAFKA_PASSWORD
+        username:
+            env: KAFKA_USERNAME
+    comment: SASL/SCRAM — set KAFKA_USERNAME and KAFKA_PASSWORD
+output:
+    default_format: json
+commands:
+    lightingmeasured:
+        description: The topic on which measured values may be produced and consumed.
+        commands:
+            subscribe:
+                description: Inform about environmental lighting conditions of a particular streetlight.
+                action:
+                    method: GET
+                    path: smartylighting.streetlights.1.0.event.{streetlightId}.lighting.measured
+                    operation_id: receiveLightMeasurement
+                args:
+                    - name: streetlightId
+                      required: true
+    lightsdim:
+        description: ""
+        commands:
+            publish:
+                description: send on smartylighting.streetlights.1.0.action.{streetlightId}.dim
+                action:
+                    method: POST
+                    path: smartylighting.streetlights.1.0.action.{streetlightId}.dim
+                    operation_id: dimLight
+                args:
+                    - name: streetlightId
+                      required: true
+    lightturnoff:
+        description: ""
+        commands:
+            publish:
+                description: send on smartylighting.streetlights.1.0.action.{streetlightId}.turn.off
+                action:
+                    method: POST
+                    path: smartylighting.streetlights.1.0.action.{streetlightId}.turn.off
+                    operation_id: turnOff
+                args:
+                    - name: streetlightId
+                      required: true
+    lightturnon:
+        description: ""
+        commands:
+            publish:
+                description: send on smartylighting.streetlights.1.0.action.{streetlightId}.turn.on
+                action:
+                    method: POST
+                    path: smartylighting.streetlights.1.0.action.{streetlightId}.turn.on
+                    operation_id: turnOn
+                args:
+                    - name: streetlightId
+                      required: true
