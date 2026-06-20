@@ -8,6 +8,7 @@ Turn any API spec into a fully-featured CLI — no code generation required.
 API spec  (.proto / .graphql / .yaml / .json)
        │
   builder generate          →   cli-schema.yaml   (human-editable)
+                               cli-schema.md     (description + example commands)
                                        │
                                runner --form ...   →   $ acs apps list --limit 5
 ```
@@ -29,6 +30,7 @@ The `cli-schema.yaml` is the product. It is human-readable, version-controllable
 
 ```bash
 # 1. Generate a cli-schema from any API spec (format auto-detected)
+#    Also writes cli-schema.schema.yaml and cli-schema.md alongside the output.
 go run ./cmd/builder generate --spec <path-to-spec> --out cli-schema.yaml
 
 # 2. Run any command defined in the schema

@@ -4,7 +4,6 @@ description: App Store Connect API
 base_url: https://api.appstoreconnect.apple.com
 auth:
     type: none
-    config: {}
 output:
     default_format: table
 commands:

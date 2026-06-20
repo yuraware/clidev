@@ -75,7 +75,7 @@ func generateCmd() *cobra.Command {
 			fmt.Fprintf(os.Stderr, "Format:  %s\n", format)
 			fmt.Fprintf(os.Stderr, "Parsing %s...\n", specPath)
 
-			form, err := generateForm(specPath, format)
+			form, stats, err := generateForm(specPath, format)
 			if err != nil {
 				return err
 			}
@@ -94,6 +94,20 @@ func generateCmd() *cobra.Command {
 			} else {
 				fmt.Fprintf(os.Stderr, "Schema:  %s\n", schemaPath)
 			}
+
+			docPath := cliSchema.DocPathFor(outPath)
+			docOpts := cliSchema.DocOptions{
+				SpecPath:     specPath,
+				SchemaPath:   outPath,
+				Format:       format,
+				Stats:        stats,
+				FormatForced: forceFmt != "",
+			}
+			if err := cliSchema.WriteDoc(docPath, form, docOpts); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: could not write docs: %v\n", err)
+			} else {
+				fmt.Fprintf(os.Stderr, "Docs:    %s\n", docPath)
+			}
 			return nil
 		},
 	}
@@ -104,33 +118,35 @@ func generateCmd() *cobra.Command {
 	return cmd
 }
 
-// generateForm parses the spec and returns a CLIForm for the detected format.
-func generateForm(specPath, format string) (*cliSchema.CLIForm, error) {
+// generateForm parses the spec and returns a CLIForm and human-readable stats for the detected format.
+func generateForm(specPath, format string) (*cliSchema.CLIForm, string, error) {
 	switch format {
 	case formats.OpenAPI:
 		spec, ops, err := oas.Parse(specPath)
 		if err != nil {
-			return nil, fmt.Errorf("parsing OpenAPI: %w", err)
+			return nil, "", fmt.Errorf("parsing OpenAPI: %w", err)
 		}
 		fmt.Fprintf(os.Stderr, "Found %d operations across %d paths\n", len(ops), len(spec.Paths))
-		return cliSchema.Generate(spec, ops), nil
+		stats := fmt.Sprintf("%d paths · %d operations", len(spec.Paths), len(ops))
+		return cliSchema.Generate(spec, ops), stats, nil
 
 	case formats.Proto:
 		spec, err := proto.Parse(specPath)
 		if err != nil {
-			return nil, fmt.Errorf("parsing proto: %w", err)
+			return nil, "", fmt.Errorf("parsing proto: %w", err)
 		}
 		total := 0
 		for _, s := range spec.Services {
 			total += len(s.RPCs)
 		}
 		fmt.Fprintf(os.Stderr, "Found %d services, %d RPCs\n", len(spec.Services), total)
-		return proto.Generate(spec), nil
+		stats := fmt.Sprintf("%d services · %d RPCs", len(spec.Services), total)
+		return proto.Generate(spec), stats, nil
 
 	case formats.GraphQL:
 		spec, err := gql.Parse(specPath)
 		if err != nil {
-			return nil, fmt.Errorf("parsing GraphQL: %w", err)
+			return nil, "", fmt.Errorf("parsing GraphQL: %w", err)
 		}
 		qCount, mCount := 0, 0
 		if spec.Schema.Query != nil {
@@ -140,19 +156,22 @@ func generateForm(specPath, format string) (*cliSchema.CLIForm, error) {
 			mCount = len(spec.Schema.Mutation.Fields)
 		}
 		fmt.Fprintf(os.Stderr, "Found %d queries, %d mutations\n", qCount, mCount)
-		return gql.Generate(spec), nil
+		stats := fmt.Sprintf("%d queries · %d mutations", qCount, mCount)
+		return gql.Generate(spec), stats, nil
 
 	case formats.AsyncAPI:
 		spec, err := asyncapi.Parse(specPath)
 		if err != nil {
-			return nil, fmt.Errorf("parsing AsyncAPI: %w", err)
+			return nil, "", fmt.Errorf("parsing AsyncAPI: %w", err)
 		}
 		fmt.Fprintf(os.Stderr, "AsyncAPI %s — %d channels, %d operations\n",
 			spec.AsyncAPI, len(spec.Channels), len(spec.Operations))
-		return asyncapi.Generate(spec), nil
+		stats := fmt.Sprintf("AsyncAPI %s · %d channels · %d operations",
+			spec.AsyncAPI, len(spec.Channels), len(spec.Operations))
+		return asyncapi.Generate(spec), stats, nil
 
 	default:
-		return nil, fmt.Errorf("unsupported format: %q", format)
+		return nil, "", fmt.Errorf("unsupported format: %q", format)
 	}
 }
 
