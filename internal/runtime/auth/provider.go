@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/yurikobets/cli-builder/internal/cliSchema"
+	"github.com/yuraware/clidev/internal/cliSchema"
 )
 
 // Provider can attach auth to an HTTP request header.

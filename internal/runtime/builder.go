@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/yurikobets/cli-builder/internal/cliSchema"
-	"github.com/yurikobets/cli-builder/internal/output"
-	"github.com/yurikobets/cli-builder/internal/runtime/auth"
+	"github.com/yuraware/clidev/internal/cliSchema"
+	"github.com/yuraware/clidev/internal/output"
+	"github.com/yuraware/clidev/internal/runtime/auth"
 )
 
 // Build constructs a root *cobra.Command from a CLIForm.

@@ -8,7 +8,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/yurikobets/cli-builder/internal/cliSchema"
+	"github.com/yuraware/clidev/internal/cliSchema"
 )
 
 // Spec is the parsed representation of an AsyncAPI document.

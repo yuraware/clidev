@@ -1,4 +1,4 @@
-module github.com/yurikobets/cli-builder
+module github.com/yuraware/clidev
 
 go 1.26.2
 

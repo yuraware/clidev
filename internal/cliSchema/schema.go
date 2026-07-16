@@ -13,9 +13,9 @@ import (
 // JSONSchemaRoot is the JSON Schema that validates a cli-schema document.
 var JSONSchemaRoot = map[string]any{
 	"$schema":     "https://json-schema.org/draft/2020-12/schema",
-	"$id":         "https://github.com/yurikobets/cli-builder/schema/cli-schema.schema.json",
+	"$id":         "https://github.com/yuraware/clidev/schema/cli-schema.schema.json",
 	"title":       "cli-schema",
-	"description": "Declarative CLI definition format for cli-builder",
+	"description": "Declarative CLI definition format for clidev",
 	"type":        "object",
 	"required":    []string{"name", "base_url"},
 	"properties": map[string]any{

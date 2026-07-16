@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/yurikobets/cli-builder/internal/oas"
+	"github.com/yuraware/clidev/internal/oas"
 )
 
 // Generate converts a parsed OAS spec into a CLIForm.

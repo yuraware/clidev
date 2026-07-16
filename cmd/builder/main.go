@@ -10,12 +10,12 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"github.com/yurikobets/cli-builder/internal/asyncapi"
-	"github.com/yurikobets/cli-builder/internal/cliSchema"
-	"github.com/yurikobets/cli-builder/internal/formats"
-	gql "github.com/yurikobets/cli-builder/internal/graphql"
-	"github.com/yurikobets/cli-builder/internal/oas"
-	"github.com/yurikobets/cli-builder/internal/proto"
+	"github.com/yuraware/clidev/internal/asyncapi"
+	"github.com/yuraware/clidev/internal/cliSchema"
+	"github.com/yuraware/clidev/internal/formats"
+	gql "github.com/yuraware/clidev/internal/graphql"
+	"github.com/yuraware/clidev/internal/oas"
+	"github.com/yuraware/clidev/internal/proto"
 )
 
 func main() {

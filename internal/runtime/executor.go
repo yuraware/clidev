@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/yurikobets/cli-builder/internal/cliSchema"
-	"github.com/yurikobets/cli-builder/internal/runtime/auth"
+	"github.com/yuraware/clidev/internal/cliSchema"
+	"github.com/yuraware/clidev/internal/runtime/auth"
 )
 
 // Executor runs a CLI command's HTTP action.

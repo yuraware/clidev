@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/yurikobets/cli-builder/internal/cliSchema"
-	"github.com/yurikobets/cli-builder/internal/runtime"
+	"github.com/yuraware/clidev/internal/cliSchema"
+	"github.com/yuraware/clidev/internal/runtime"
 )
 
 func main() {

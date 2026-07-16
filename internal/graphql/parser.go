@@ -9,7 +9,7 @@ import (
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 
-	"github.com/yurikobets/cli-builder/internal/cliSchema"
+	"github.com/yuraware/clidev/internal/cliSchema"
 )
 
 // Spec holds the parsed GraphQL schema.

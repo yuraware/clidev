@@ -1,8 +1,8 @@
-# cli-builder
+# clidev
 
 Turn any API spec into a fully-featured CLI — no code generation required.
 
-`cli-builder` reads an API spec in any supported format and produces a declarative `cli-schema.yaml` file. A companion runtime (`runner`) interprets that file at startup and builds a complete [Cobra](https://cobra.dev)-powered CLI: commands, subcommands, flags, auth, and table output — all driven by the schema.
+`clidev` reads an API spec in any supported format and produces a declarative `cli-schema.yaml` file. A companion runtime (`runner`) interprets that file at startup and builds a complete [Cobra](https://cobra.dev)-powered CLI: commands, subcommands, flags, auth, and table output — all driven by the schema.
 
 ```
 API spec  (.proto / .graphql / .yaml / .json)

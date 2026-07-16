@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/yurikobets/cli-builder/internal/cliSchema"
+	"github.com/yuraware/clidev/internal/cliSchema"
 )
 
 // Generate converts a parsed proto Spec into a CLIForm.

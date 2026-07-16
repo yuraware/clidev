@@ -1,6 +1,6 @@
-$id: https://github.com/yurikobets/cli-builder/schema/cli-schema.schema.json
+$id: https://github.com/yuraware/clidev/schema/cli-schema.schema.json
 $schema: https://json-schema.org/draft/2020-12/schema
-description: Declarative CLI definition format for cli-builder
+description: Declarative CLI definition format for clidev
 properties:
     auth:
         properties:
