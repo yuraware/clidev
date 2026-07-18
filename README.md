@@ -2,15 +2,15 @@
 
 Turn any API spec into a fully-featured CLI — no code generation required.
 
-`clidev` reads an API spec in any supported format and produces a declarative `cli-schema.yaml` file. A companion runtime (`runner`) interprets that file at startup and builds a complete [Cobra](https://cobra.dev)-powered CLI: commands, subcommands, flags, auth, and table output — all driven by the schema.
+`clidev generate` reads an API spec in any supported format and produces a declarative `cli-schema.yaml` file. `clidev run` interprets that file at startup and builds a complete [Cobra](https://cobra.dev)-powered CLI: commands, subcommands, flags, auth, and table output — all driven by the schema.
 
 ```
 API spec  (.proto / .graphql / .yaml / .json)
        │
-  builder generate          →   cli-schema.yaml   (human-editable)
+  clidev generate           →   cli-schema.yaml   (human-editable)
                                cli-schema.md     (description + example commands)
                                        │
-                               runner --form ...   →   $ acs apps list --limit 5
+                               clidev run --form ...   →   $ acs apps list --limit 5
 ```
 
 The `cli-schema.yaml` is the product. It is human-readable, version-controllable, and can be edited by hand to add auth, rename commands, restrict flags, or add commands that aren't in the spec.
@@ -29,20 +29,18 @@ The `cli-schema.yaml` is the product. It is human-readable, version-controllable
 ## Quick start
 
 ```bash
+# Install the clidev command
+go install github.com/yuraware/clidev@latest
+
 # 1. Generate a cli-schema from any API spec (format auto-detected)
 #    Also writes cli-schema.schema.yaml and cli-schema.md alongside the output.
-go run ./cmd/builder generate --spec <path-to-spec> --out cli-schema.yaml
+clidev generate --spec <path-to-spec> --out cli-schema.yaml
 
 # 2. Run any command defined in the schema
-go run ./cmd/runner --form cli-schema.yaml --help
+clidev run --form cli-schema.yaml --help
 ```
 
-Or build standalone binaries first:
-
-```bash
-go build -o bin/builder ./cmd/builder
-go build -o bin/runner  ./cmd/runner
-```
+Working from a clone, use `go run . generate ...` / `go run . run ...`, or build a local binary with `go build -o bin/clidev .`
 
 ---
 
@@ -61,7 +59,7 @@ The repo ships four sample APIs covering all supported formats.
 **Source:** [developer.apple.com/documentation/appstoreconnectapi](https://developer.apple.com/documentation/appstoreconnectapi)
 
 ```bash
-go run ./cmd/builder generate \
+clidev generate \
   --spec sample-api/acs/openapi.oas.json \
   --out  sample-api/acs/cli-schema.yaml
 ```
@@ -76,27 +74,27 @@ export APP_STORE_PRIVATE_KEY="$(cat ~/AuthKey_XXXXXXXXXX.p8)"
 
 ```bash
 # List your apps
-go run ./cmd/runner --form sample-api/acs/cli-schema.yaml apps list --limit 5
+clidev run --form sample-api/acs/cli-schema.yaml apps list --limit 5
 
 # Filter by name, select specific fields
-go run ./cmd/runner --form sample-api/acs/cli-schema.yaml apps list \
+clidev run --form sample-api/acs/cli-schema.yaml apps list \
   --filter-name "My App" --fields-apps "name,bundleId,sku"
 
 # Get a single app by ID
-go run ./cmd/runner --form sample-api/acs/cli-schema.yaml apps get <app-id>
+clidev run --form sample-api/acs/cli-schema.yaml apps get <app-id>
 
 # List builds for an app
-go run ./cmd/runner --form sample-api/acs/cli-schema.yaml builds list \
+clidev run --form sample-api/acs/cli-schema.yaml builds list \
   --filter-app <app-id> --limit 10
 
 # List beta groups
-go run ./cmd/runner --form sample-api/acs/cli-schema.yaml betaGroups list
+clidev run --form sample-api/acs/cli-schema.yaml betaGroups list
 
 # List app events for a specific app
-go run ./cmd/runner --form sample-api/acs/cli-schema.yaml apps appEvents list <app-id>
+clidev run --form sample-api/acs/cli-schema.yaml apps appEvents list <app-id>
 
 # JSON output
-go run ./cmd/runner --form sample-api/acs/cli-schema.yaml apps list -o json
+clidev run --form sample-api/acs/cli-schema.yaml apps list -o json
 ```
 
 ---
@@ -110,7 +108,7 @@ go run ./cmd/runner --form sample-api/acs/cli-schema.yaml apps list -o json
 **Source:** [googleapis/googleapis — google/pubsub/v1/pubsub.proto](https://github.com/googleapis/googleapis/blob/master/google/pubsub/v1/pubsub.proto)
 
 ```bash
-go run ./cmd/builder generate \
+clidev generate \
   --spec sample-api/pubsub/pubsub.proto \
   --out  sample-api/pubsub/cli-schema.yaml
 ```
@@ -120,23 +118,23 @@ export GOOGLE_ACCESS_TOKEN="$(gcloud auth print-access-token)"
 export PROJECT="projects/my-gcp-project"
 
 # Create a topic
-go run ./cmd/runner --form sample-api/pubsub/cli-schema.yaml \
+clidev run --form sample-api/pubsub/cli-schema.yaml \
   publisher create "$PROJECT/topics/my-topic"
 
 # List topics in a project
-go run ./cmd/runner --form sample-api/pubsub/cli-schema.yaml \
+clidev run --form sample-api/pubsub/cli-schema.yaml \
   publisher list "$PROJECT"
 
 # Publish a message
-go run ./cmd/runner --form sample-api/pubsub/cli-schema.yaml \
+clidev run --form sample-api/pubsub/cli-schema.yaml \
   publisher publish "$PROJECT/topics/my-topic"
 
 # Create a subscription
-go run ./cmd/runner --form sample-api/pubsub/cli-schema.yaml \
+clidev run --form sample-api/pubsub/cli-schema.yaml \
   subscriber create "$PROJECT/subscriptions/my-sub"
 
 # Pull messages from a subscription
-go run ./cmd/runner --form sample-api/pubsub/cli-schema.yaml \
+clidev run --form sample-api/pubsub/cli-schema.yaml \
   subscriber pull "$PROJECT/subscriptions/my-sub"
 ```
 
@@ -151,7 +149,7 @@ go run ./cmd/runner --form sample-api/pubsub/cli-schema.yaml \
 **Source:** [docs.github.com/en/graphql](https://docs.github.com/en/graphql)
 
 ```bash
-go run ./cmd/builder generate \
+clidev generate \
   --spec sample-api/github-gql/schema.graphql \
   --out  sample-api/github-gql/cli-schema.yaml
 ```
@@ -166,27 +164,27 @@ base_url: https://api.github.com
 export GRAPHQL_TOKEN="ghp_xxxxxxxxxxxxxxxxxxxx"
 
 # Look up a user
-go run ./cmd/runner --form sample-api/github-gql/cli-schema.yaml \
+clidev run --form sample-api/github-gql/cli-schema.yaml \
   query user octocat
 
 # Get a repository
-go run ./cmd/runner --form sample-api/github-gql/cli-schema.yaml \
+clidev run --form sample-api/github-gql/cli-schema.yaml \
   query repository octocat hello-world
 
 # Look up an organization
-go run ./cmd/runner --form sample-api/github-gql/cli-schema.yaml \
+clidev run --form sample-api/github-gql/cli-schema.yaml \
   query organization github
 
 # Search repositories
-go run ./cmd/runner --form sample-api/github-gql/cli-schema.yaml \
+clidev run --form sample-api/github-gql/cli-schema.yaml \
   query search --query "language:go stars:>1000" --type REPOSITORY
 
 # Create an issue
-go run ./cmd/runner --form sample-api/github-gql/cli-schema.yaml \
+clidev run --form sample-api/github-gql/cli-schema.yaml \
   mutate create-issue --repository-id <id> --title "Bug: ..."
 
 # Get authenticated user info
-go run ./cmd/runner --form sample-api/github-gql/cli-schema.yaml \
+clidev run --form sample-api/github-gql/cli-schema.yaml \
   query viewer
 ```
 
@@ -201,7 +199,7 @@ go run ./cmd/runner --form sample-api/github-gql/cli-schema.yaml \
 **Source:** [asyncapi/spec — examples/streetlights-kafka-asyncapi.yml](https://github.com/asyncapi/spec/blob/master/examples/streetlights-kafka-asyncapi.yml)
 
 ```bash
-go run ./cmd/builder generate \
+clidev generate \
   --spec sample-api/streetlights/asyncapi.yml \
   --out  sample-api/streetlights/cli-schema.yaml
 ```
@@ -211,19 +209,19 @@ export KAFKA_USERNAME="my-user"
 export KAFKA_PASSWORD="my-password"
 
 # Subscribe to lighting measurements from a streetlight
-go run ./cmd/runner --form sample-api/streetlights/cli-schema.yaml \
+clidev run --form sample-api/streetlights/cli-schema.yaml \
   lightingmeasured subscribe
 
 # Publish a command to turn on a streetlight
-go run ./cmd/runner --form sample-api/streetlights/cli-schema.yaml \
+clidev run --form sample-api/streetlights/cli-schema.yaml \
   lightturnon publish
 
 # Publish a command to dim a streetlight
-go run ./cmd/runner --form sample-api/streetlights/cli-schema.yaml \
+clidev run --form sample-api/streetlights/cli-schema.yaml \
   lightsdim publish --lumens 50
 
 # Subscribe to turn-off events
-go run ./cmd/runner --form sample-api/streetlights/cli-schema.yaml \
+clidev run --form sample-api/streetlights/cli-schema.yaml \
   lightturnoff subscribe
 ```
 
@@ -363,11 +361,11 @@ sample-api/
 
 ```bash
 # Format is auto-detected from file extension and content
-go run ./cmd/builder generate --spec path/to/your-api.proto --out my-api/cli-schema.yaml
+clidev generate --spec path/to/your-api.proto --out my-api/cli-schema.yaml
 
 # Force a specific format if needed
-go run ./cmd/builder generate --spec api.yaml --format openapi --out cli-schema.yaml
+clidev generate --spec api.yaml --format openapi --out cli-schema.yaml
 
 # Explore the generated CLI
-go run ./cmd/runner --form my-api/cli-schema.yaml --help
+clidev run --form my-api/cli-schema.yaml --help
 ```

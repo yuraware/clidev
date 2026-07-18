@@ -1,3 +1,5 @@
+// Command clidev turns API specs into declarative cli-schema files
+// (clidev generate) and executes the CLIs they define (clidev run).
 package main
 
 import (
@@ -16,13 +18,23 @@ import (
 	gql "github.com/yuraware/clidev/internal/graphql"
 	"github.com/yuraware/clidev/internal/oas"
 	"github.com/yuraware/clidev/internal/proto"
+	"github.com/yuraware/clidev/internal/runtime"
 )
 
 func main() {
+	// `clidev run` hands the remaining args to a Cobra tree built from the
+	// cli-schema at startup, so it must bypass the static root command —
+	// otherwise the root would try to parse the dynamic CLI's flags.
+	if len(os.Args) > 1 && os.Args[1] == "run" {
+		runForm(os.Args[2:])
+		return
+	}
+
 	root := &cobra.Command{
-		Use:   "builder",
-		Short: "Generate cli-schema files from API specs",
-		Long: `builder converts API specs in multiple formats into a declarative cli-schema file.
+		Use:   "clidev",
+		Short: "Turn any API spec into a fully-featured CLI",
+		Long: `clidev converts API specs into declarative cli-schema files and
+executes the CLIs they define — no code generation required.
 
 Supported input formats:
   openapi   — OpenAPI 3.x / Swagger 2.x  (.json, .yaml, .yml)
@@ -33,9 +45,96 @@ Supported input formats:
 
 	root.AddCommand(generateCmd())
 	root.AddCommand(schemaCmd())
+	root.AddCommand(runHelpCmd())
 
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
+	}
+}
+
+// runForm loads the cli-schema, builds the dynamic CLI, and executes it.
+func runForm(args []string) {
+	formPath, remaining := extractFormFlag(args)
+
+	if formPath == "" {
+		fmt.Fprintf(os.Stderr, "Usage: clidev run --form <cli-schema.yaml> [command...]\n")
+		fmt.Fprintf(os.Stderr, "       CLIDEV_FORM=cli-schema.yaml clidev run [command...]\n")
+		os.Exit(1)
+	}
+
+	form, err := cliSchema.Load(formPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading cli-schema: %v\n", err)
+		os.Exit(1)
+	}
+
+	root, err := runtime.Build(form)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error building CLI: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Override os.Args so Cobra parses the remaining args.
+	os.Args = append([]string{form.Name}, remaining...)
+
+	root.SetErr(os.Stderr)
+	root.SetOut(os.Stdout)
+
+	if err := root.Execute(); err != nil {
+		os.Exit(1)
+	}
+}
+
+// extractFormFlag pulls --form <path> out of args, returning the path and the rest.
+func extractFormFlag(args []string) (string, []string) {
+	// Support both `--form=path` and `--form path`.
+	var formPath string
+	var rest []string
+
+	skipNext := false
+	for i, a := range args {
+		if skipNext {
+			skipNext = false
+			continue
+		}
+		if a == "--form" && i+1 < len(args) {
+			formPath = args[i+1]
+			skipNext = true
+			continue
+		}
+		if len(a) > 7 && a[:7] == "--form=" {
+			formPath = a[7:]
+			continue
+		}
+		rest = append(rest, a)
+	}
+
+	if formPath == "" {
+		formPath = os.Getenv("CLIDEV_FORM")
+	}
+
+	return formPath, rest
+}
+
+// runHelpCmd registers `run` for help listings only; main intercepts the
+// actual invocation before Cobra dispatch.
+func runHelpCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "run --form <cli-schema.yaml> [command...]",
+		Short: "Execute a CLI defined by a cli-schema file",
+		Long: `run loads a cli-schema.yaml (or .json) file, dynamically builds
+a fully-featured CLI from it, and executes the requested command.
+
+Usage:
+  clidev run --form <path/to/cli-schema.yaml> [command] [flags]
+  CLIDEV_FORM=cli-schema.yaml clidev run [command] [flags]`,
+		Example: `  clidev run --form sample-api/acs/cli-schema.yaml apps list --limit 5
+  clidev run --form sample-api/acs/cli-schema.yaml apps get <id>
+  clidev run --form sample-api/acs/cli-schema.yaml builds list --filter-app <app-id>`,
+		DisableFlagParsing: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Help()
+		},
 	}
 }
 
@@ -46,19 +145,19 @@ func generateCmd() *cobra.Command {
 		Use:   "generate",
 		Short: "Generate a cli-schema from an API spec (auto-detects format)",
 		Example: `  # OpenAPI
-  builder generate --spec sample-api/acs/openapi.oas.json --out sample-api/acs/cli-schema.yaml
+  clidev generate --spec sample-api/acs/openapi.oas.json --out sample-api/acs/cli-schema.yaml
 
   # gRPC / Protocol Buffers
-  builder generate --spec sample-api/pubsub/pubsub.proto --out sample-api/pubsub/cli-schema.yaml
+  clidev generate --spec sample-api/pubsub/pubsub.proto --out sample-api/pubsub/cli-schema.yaml
 
   # GraphQL SDL
-  builder generate --spec sample-api/github-gql/schema.graphql --out sample-api/github-gql/cli-schema.yaml
+  clidev generate --spec sample-api/github-gql/schema.graphql --out sample-api/github-gql/cli-schema.yaml
 
   # AsyncAPI
-  builder generate --spec sample-api/streetlights/asyncapi.yml --out sample-api/streetlights/cli-schema.yaml
+  clidev generate --spec sample-api/streetlights/asyncapi.yml --out sample-api/streetlights/cli-schema.yaml
 
   # Force a specific format
-  builder generate --spec api.yaml --format openapi --out cli-schema.yaml`,
+  clidev generate --spec api.yaml --format openapi --out cli-schema.yaml`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if specPath == "" {
 				return fmt.Errorf("--spec is required")
@@ -181,8 +280,8 @@ func schemaCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "schema",
 		Short: "Write the cli-schema JSON Schema to a file",
-		Example: `  builder schema --out schema/cli-schema.schema.json
-  builder schema --out schema/cli-schema.schema.yaml`,
+		Example: `  clidev schema --out schema/cli-schema.schema.json
+  clidev schema --out schema/cli-schema.schema.yaml`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if outPath == "" {
 				outPath = "schema/cli-schema.schema.json"
